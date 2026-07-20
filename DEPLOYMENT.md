@@ -50,6 +50,20 @@ from the `VITE_FIREBASE_*` env vars at build time.
 - **Node.js ≥ 18** and npm.
 - Firebase web config (project `merodoctor-baaa7`) — the six `VITE_FIREBASE_*` values.
 
+## Run locally (development)
+
+```bash
+npm install       # first time
+npm run dev       # Vite dev server
+```
+
+Then open **http://localhost:5173/** — the dev server serves the **landing page at
+`/`** and the **app at `/app`**, mirroring production. (Do **not** double-click
+`index.html` — a Vite app must be served, not opened as a file, or it renders blank.)
+
+To preview the exact production bundle instead: `npm run build && npm start` →
+http://localhost:3000/.
+
 ---
 
 ## Build (produces `dist/`)
