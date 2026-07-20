@@ -20,7 +20,22 @@ const firebaseConfig: FirebaseOptions = {
 /** False when the env config hasn't been filled in — screens can gate on this. */
 export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 
-export const app = initializeApp(firebaseConfig);
+if (!isFirebaseConfigured) {
+  console.error(
+    '[firebase] Missing VITE_FIREBASE_* env vars. On Vercel: Settings → Environment ' +
+      'Variables → add all six, then redeploy. Showing the setup notice instead of the app.',
+  );
+}
+
+// When the config is missing (e.g. env vars not set on the host), initialise with
+// a harmless placeholder so top-level getAuth/getFirestore don't throw
+// `auth/invalid-api-key` and blank the screen. The UI gates on
+// isFirebaseConfigured and shows a "Setup needed" notice instead of a blank page.
+export const app = initializeApp(
+  isFirebaseConfigured
+    ? firebaseConfig
+    : { apiKey: 'unconfigured-placeholder', projectId: 'unconfigured', appId: 'unconfigured' },
+);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
@@ -40,6 +55,8 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
  * but we set it explicitly so it can never silently regress. Fire-and-forget:
  * it resolves before the first sign-in completes.
  */
-void setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error('[firebase] Failed to set auth persistence', error);
-});
+if (isFirebaseConfigured) {
+  void setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.error('[firebase] Failed to set auth persistence', error);
+  });
+}
