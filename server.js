@@ -60,8 +60,10 @@ const server = createServer(async (req, res) => {
     try {
       body = await readFile(filePath);
     } catch {
-      // Not on disk → SPA fallback so client-side routes (/dashboard, …) work.
-      filePath = join(DIST, 'index.html');
+      // Not on disk → SPA fallback. App routes fall back to the app shell
+      // (dist/app/index.html); everything else to the landing page.
+      const shell = urlPath.startsWith('/app') ? join('app', 'index.html') : 'index.html';
+      filePath = join(DIST, shell);
       ext = '.html';
       body = await readFile(filePath);
     }

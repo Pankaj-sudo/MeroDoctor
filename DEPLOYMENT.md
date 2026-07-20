@@ -11,21 +11,33 @@ Firebase (Auth + Firestore + Storage). This guide covers deploying it to **Verce
 Everything you edit lives in the **project root**; the deployable output is generated
 into **`dist/`**.
 
+The site has **two zones on one origin**: the marketing **landing page at `/`**
+(with Google sign-in) and the **React app at `/app`**. Same origin means the
+Firebase session set on the landing page carries straight into the app.
+
 ```
 MeroDoctor/
-├── src/                 # source code (components, pages, services, context…)
-├── index.html           # app HTML entry
+├── src/                 # React app source (components, pages, services, context…)
+├── index.html           # app HTML entry (built → dist/app/index.html)
+├── landing/index.html   # marketing landing page + Google sign-in (built → dist/index.html)
 ├── package.json         # deps + scripts
-├── vite.config.ts       # build config
+├── vite.config.ts       # build config (base '/app/', outDir dist/app)
 ├── tsconfig*.json        # TypeScript config
 ├── server.js            # zero-dep Node.js static server (self-hosting)
-├── vercel.json          # Vercel SPA rewrites + asset caching
-├── .env.local           # local Firebase config (gitignored — NOT deployed)
+├── vercel.json          # Vercel routing (/ → landing, /app → app) + asset caching
+├── .env.local           # local Firebase config for the app (gitignored — NOT deployed)
 ├── node_modules/        # dependencies (gitignored — reinstalled on build)
 └── dist/                # ← PRODUCTION BUILD (generated; gitignored)
-    ├── index.html
-    └── assets/          # hashed JS/CSS — the only files a host needs to serve
+    ├── index.html       # landing page (assembled from landing/) → served at /
+    └── app/             # React app → served at /app
+        ├── index.html
+        └── assets/      # hashed JS/CSS
 ```
+
+`npm run build` = type-check → `vite build` (app → `dist/app/`) → copy the landing
+page to `dist/index.html`. The landing page loads the Firebase SDK from a CDN and
+signs in with a popup **on click** (never on load); the app's Firebase config comes
+from the `VITE_FIREBASE_*` env vars at build time.
 
 - **Committed to git:** source, config, `server.js`, `vercel.json`, `DEPLOYMENT.md`.
 - **Never committed (see `.gitignore`):** `node_modules/`, `dist/`, caches, logs, `.env.local`.

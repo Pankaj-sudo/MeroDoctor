@@ -10,7 +10,7 @@ if (!rootEl) throw new Error('Root element #root not found');
 
 createRoot(rootEl).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/app">
       <AuthProvider>
         <App />
       </AuthProvider>
