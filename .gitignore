@@ -1,18 +1,38 @@
-# dependencies (Vercel reinstalls these — never committed)
+# ===== dependencies (reinstalled on build; never committed) =====
 node_modules/
-**/node_modules/
+.pnp
+.pnp.js
 
-# build output
+# ===== production build / deployment output (generated) =====
 dist/
-**/dist/
+dist-ssr/
+build/
 
-# local env with real config / secrets (set these in Vercel dashboard instead)
+# ===== caches =====
+.vite/
+.cache/
+.eslintcache
+.turbo/
+*.tsbuildinfo
+
+# ===== logs =====
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== local env / secrets (set these in Vercel / the host instead) =====
 .env.local
-**/.env.local
 .env.*.local
 
-# OS / editor
+# ===== hosting / tooling =====
+.vercel/
+
+# ===== OS / editor junk =====
 .DS_Store
-**/.DS_Store
+Thumbs.db
 .vscode/
 .idea/
+*.swp
