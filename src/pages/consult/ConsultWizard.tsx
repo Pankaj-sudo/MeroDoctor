@@ -4,7 +4,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { CONSULTATION_FEE, formatNpr } from '../../config/payment';
 import { createConsultation, uploadPaymentScreenshot } from '../../services/consultationService';
 import { emptyDraft, type ConsultationDraft, type PaymentInfo } from '../../types/consultation';
-import { PatientInfoStep } from './steps/PatientInfoStep';
 import { SymptomsStep } from './steps/SymptomsStep';
 import { QuestionnaireStep } from './steps/QuestionnaireStep';
 import { MedicalHistoryStep } from './steps/MedicalHistoryStep';
@@ -13,7 +12,6 @@ import { PaymentStep } from './steps/PaymentStep';
 import '../../styles/consult.css';
 
 const STEPS = [
-  { key: 'Details', title: 'Your details', subtitle: 'Who is this consultation for?' },
   { key: 'Reason', title: 'What brings you in?', subtitle: 'Choose the areas that match how you feel.' },
   { key: 'Questions', title: 'A few quick questions', subtitle: 'Tailored to what you selected.' },
   { key: 'History', title: 'Medical history', subtitle: 'This helps your doctor keep you safe.' },
@@ -24,15 +22,8 @@ const STEPS = [
 function stepValid(step: number, draft: ConsultationDraft, screenshot: File | null): boolean {
   switch (step) {
     case 0:
-      return Boolean(
-        draft.patient.fullName.trim() &&
-          (draft.patient.age || draft.patient.dob) &&
-          draft.patient.gender &&
-          draft.patient.phone.trim(),
-      );
-    case 1:
       return draft.symptoms.length > 0 || draft.customComplaint.trim().length > 0;
-    case 5:
+    case 4:
       return Boolean(screenshot);
     default:
       return true;
@@ -123,9 +114,6 @@ export function ConsultWizard() {
         </div>
         <div className="c-step-anim" key={step}>
           {step === 0 && (
-            <PatientInfoStep value={draft.patient} onChange={(patient) => setDraft({ ...draft, patient })} />
-          )}
-          {step === 1 && (
             <SymptomsStep
               symptoms={draft.symptoms}
               customComplaint={draft.customComplaint}
@@ -133,18 +121,18 @@ export function ConsultWizard() {
               onCustom={(customComplaint) => setDraft({ ...draft, customComplaint })}
             />
           )}
-          {step === 2 && (
+          {step === 1 && (
             <QuestionnaireStep
               symptoms={draft.symptoms}
               answers={draft.answers}
               onChange={(answers) => setDraft({ ...draft, answers })}
             />
           )}
-          {step === 3 && (
+          {step === 2 && (
             <MedicalHistoryStep value={draft.history} onChange={(history) => setDraft({ ...draft, history })} />
           )}
-          {step === 4 && <ReviewStep draft={draft} onEdit={(s) => setStep(s)} />}
-          {step === 5 && <PaymentStep screenshot={screenshot} onScreenshot={setScreenshot} />}
+          {step === 3 && <ReviewStep draft={draft} onEdit={(s) => setStep(s)} />}
+          {step === 4 && <PaymentStep screenshot={screenshot} onScreenshot={setScreenshot} />}
         </div>
       </section>
 

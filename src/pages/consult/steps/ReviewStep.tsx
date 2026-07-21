@@ -47,22 +47,9 @@ export function ReviewStep({
   draft: ConsultationDraft;
   onEdit: (step: number) => void;
 }) {
-  const p = draft.patient;
-
   return (
     <div className="c-review">
-      <Section title="Patient information" step={0} onEdit={onEdit}>
-        <dl className="c-sum__list">
-          <Row label="Name" value={p.fullName} />
-          <Row label="Age & gender" value={[p.age && `${p.age} yrs`, p.gender].filter(Boolean).join(' · ')} />
-          <Row label="Height / weight" value={[p.heightCm && `${p.heightCm} cm`, p.weightKg && `${p.weightKg} kg`].filter(Boolean).join(' · ')} />
-          <Row label="Phone" value={p.phone} />
-          <Row label="Email" value={p.email} />
-          <Row label="Address" value={p.address} />
-        </dl>
-      </Section>
-
-      <Section title="Reason for consultation" step={1} onEdit={onEdit}>
+      <Section title="Reason for consultation" step={0} onEdit={onEdit}>
         {draft.symptoms.length > 0 ? (
           <div className="c-chips c-chips--static">
             {draft.symptoms.map((s) => (
@@ -77,7 +64,7 @@ export function ReviewStep({
       </Section>
 
       {draft.symptoms.length > 0 ? (
-        <Section title="Your answers" step={2} onEdit={onEdit}>
+        <Section title="Your answers" step={1} onEdit={onEdit}>
           {draft.symptoms.map((sym) => {
             const qs = questionsForSymptom(sym).filter((q) => answerText(draft.answers[q.id]));
             if (qs.length === 0) return null;
@@ -95,7 +82,7 @@ export function ReviewStep({
         </Section>
       ) : null}
 
-      <Section title="Medical history" step={3} onEdit={onEdit}>
+      <Section title="Medical history" step={2} onEdit={onEdit}>
         <dl className="c-sum__list">
           <Row label="Past history" value={draft.history.pastMedical} />
           <Row label="Surgeries" value={draft.history.surgeries} />
