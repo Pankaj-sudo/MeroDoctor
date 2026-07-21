@@ -22,16 +22,32 @@ service cloud.firestore {
     function isStaff() { return role() in ['doctor', 'admin', 'clinic_staff']; }
     function isAdmin() { return role() == 'admin'; }
 
+    // The practice's registered physician email(s). A self-signup may claim the
+    // 'doctor' role ONLY when the Firebase-verified token email is on this list,
+    // so the Doctor Dashboard can never be reached by spoofing a role client-side.
+    // Add emails here to onboard more doctors.
+    function doctorEmails() { return ['pankaj.ydv707@gmail.com']; }
+    function isDoctorEmail() {
+      return request.auth != null && request.auth.token.email != null
+        && request.auth.token.email.lower() in doctorEmails();
+    }
+
     // ------------------------------------------------------------------ users
     match /users/{uid} {
       allow read: if isOwner(uid) || isStaff();
-      // self-signup may only be a patient (or doctor onboarding); admin set by hand
+      // Self-signup may create a patient; the 'doctor' role is allowed only for a
+      // registered physician email (verified by the auth token, not client input).
       allow create: if isOwner(uid)
         && request.resource.data.uid == uid
-        && request.resource.data.role in ['patient', 'doctor'];
-      allow update: if (isOwner(uid) && request.resource.data.role == resource.data.role
-                        && request.resource.data.uid == resource.data.uid)
-        || isAdmin();
+        && (request.resource.data.role == 'patient'
+            || (request.resource.data.role == 'doctor' && isDoctorEmail()));
+      // Owners may refresh their profile but not change their own role — except a
+      // registered physician email may (self-)promote to 'doctor'. Admins may anything.
+      allow update: if isAdmin()
+        || (isOwner(uid)
+            && request.resource.data.uid == resource.data.uid
+            && (request.resource.data.role == resource.data.role
+                || (request.resource.data.role == 'doctor' && isDoctorEmail())));
       allow delete: if isAdmin();
     }
 
