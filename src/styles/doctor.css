@@ -21,6 +21,28 @@
 .d-top__actions { display: flex; align-items: center; gap: 14px; }
 .d-top__who { font-size: 14px; color: var(--muted); display: none; }
 @media (min-width: 720px) { .d-top__who { display: inline; } }
+
+/* clinician identity chip */
+.d-me { display: none; align-items: center; gap: 11px; padding-left: 4px; }
+@media (min-width: 780px) { .d-me { display: flex; } }
+.d-me__avatar {
+  position: relative; width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(150deg, rgba(216,154,110,0.35), rgba(160,92,51,0.5));
+  color: var(--cream-2); font: 600 14px var(--serif); letter-spacing: 0.02em;
+}
+.d-me__online {
+  position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%;
+  background: #4fbf7a; border: 2px solid var(--espresso); animation: cPulse 2.6s ease-out infinite;
+}
+.d-me__id { display: flex; flex-direction: column; line-height: 1.25; }
+.d-me__name { font: 500 14px var(--sans); color: var(--cream-2); }
+.d-me__meta { font-size: 11px; color: var(--muted-2); display: flex; align-items: center; gap: 8px; }
+.d-me__admin {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+  color: #f0c9a8; background: rgba(216,154,110,0.16); border: 1px solid rgba(216,154,110,0.4);
+  padding: 1px 7px; border-radius: 999px;
+}
 .d-iconbtn {
   position: relative; width: 42px; height: 42px; border-radius: 12px;
   border: 1px solid var(--line); background: rgba(240, 231, 218, 0.05);

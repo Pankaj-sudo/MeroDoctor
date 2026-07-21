@@ -37,6 +37,8 @@ export async function ensureUserProfile(
   const ref = userDoc(user.uid);
   const snapshot = await getDoc(ref);
 
+  const doctor = isDoctorEmail(user.email);
+
   if (!snapshot.exists()) {
     const profile = {
       uid: user.uid,
@@ -45,7 +47,8 @@ export async function ensureUserProfile(
       photoURL: user.photoURL ?? '',
       phoneNumber: user.phoneNumber ?? null,
       role: roleForEmail(user.email),
-      isVerified: isDoctorEmail(user.email),
+      isAdmin: doctor,
+      isVerified: doctor,
       status: 'active',
       provider,
       createdAt: serverTimestamp(),
@@ -58,15 +61,15 @@ export async function ensureUserProfile(
 
   const existing = snapshot.data() as UserProfile;
   // If the designated physician had signed in earlier as a patient, promote the
-  // existing account to doctor. The Firestore rules allow this transition only
-  // for the registered doctor email, so it can never be spoofed.
-  const promoteToDoctor = isDoctorEmail(user.email) && existing.role !== 'doctor';
+  // existing account to doctor + admin. The Firestore rules allow this transition
+  // only for the registered doctor email, so it can never be spoofed.
+  const promoteToDoctor = doctor && (existing.role !== 'doctor' || existing.isAdmin !== true);
   await setDoc(
     ref,
     {
       lastLogin: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      ...(promoteToDoctor ? { role: 'doctor', isVerified: true } : {}),
+      ...(promoteToDoctor ? { role: 'doctor', isAdmin: true, isVerified: true } : {}),
       // Keep provider-owned display fields fresh, but never wipe an existing
       // value with an empty one (e.g. if the provider omits it this time).
       ...(user.displayName && user.displayName !== existing.displayName

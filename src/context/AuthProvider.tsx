@@ -3,7 +3,8 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { signInWithGoogle as authSignInWithGoogle, logout as authLogout } from '../services/authService';
-import type { UserProfile } from '../types/auth';
+import { isDoctorEmail } from '../config/doctor';
+import type { Role, UserProfile } from '../types/auth';
 import { AuthContext, type AuthContextValue } from './authContext';
 
 /**
@@ -59,19 +60,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authLogout();
   }, []);
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
+  const value = useMemo<AuthContextValue>(() => {
+    // A registered physician email is authoritative for the client's role and
+    // admin flag: it comes from the Firebase-verified token, so we recognise the
+    // doctor/admin instantly — even if the Firestore profile is still a stale
+    // 'patient' (e.g. the promotion write is pending, or the rules that permit it
+    // have not been published yet). Server-side data access is still governed by
+    // the Firestore rules, which enforce the same email allow-list.
+    const emailIsDoctor = isDoctorEmail(user?.email ?? null);
+    const role: Role | null = emailIsDoctor ? 'doctor' : (profile?.role ?? null);
+    const isAdmin = emailIsDoctor || profile?.role === 'admin' || profile?.isAdmin === true;
+    return {
       user,
       profile,
       loading: !authReady || !profileReady,
       isAuthenticated: Boolean(user),
-      role: profile?.role ?? null,
-      isVerified: profile?.isVerified ?? false,
+      role,
+      isAdmin,
+      isVerified: emailIsDoctor || (profile?.isVerified ?? false),
       signInWithGoogle,
       logout,
-    }),
-    [user, profile, authReady, profileReady, signInWithGoogle, logout],
-  );
+    };
+  }, [user, profile, authReady, profileReady, signInWithGoogle, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -16,8 +16,12 @@ export interface AuthContextValue {
   loading: boolean;
   /** Convenience: a signed-in user exists. */
   isAuthenticated: boolean;
-  /** The user's role, or null. */
+  /** The user's effective role, or null. Registered physician emails always
+   *  resolve to `doctor` even before the Firestore profile catches up. */
   role: Role | null;
+  /** Elevated administrator privileges (registered doctor email, `admin` role,
+   *  or an `isAdmin` profile flag). */
+  isAdmin: boolean;
   /** Whether the account is verified (e.g. a verified doctor). */
   isVerified: boolean;
   /** Start Google sign-in (call from a click). Throws on real errors. */

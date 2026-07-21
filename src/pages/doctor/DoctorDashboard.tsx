@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { subscribeAllConsultations } from '../../services/doctorService';
 import { STATUS_META } from '../../config/consultationStatus';
 import { formatNpr } from '../../config/payment';
+import { FEATURED_DOCTOR } from '../../config/doctor';
 import type { Consultation, ConsultationStatus } from '../../types/consultation';
 import '../../styles/consult.css';
 import '../../styles/doctor.css';
@@ -65,7 +66,15 @@ const isToday = (ts?: { toDate(): Date } | null) => {
 };
 
 export function DoctorDashboard() {
-  const { profile, user, logout } = useAuth();
+  const { profile, isAdmin, logout } = useAuth();
+  const doctorName = profile?.displayName || FEATURED_DOCTOR.name;
+  const doctorInitials = doctorName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
   const navigate = useNavigate();
   const [all, setAll] = useState<Consultation[] | undefined>(undefined);
   const [q, setQ] = useState('');
@@ -151,14 +160,26 @@ export function DoctorDashboard() {
     <main className="d-shell">
       <header className="d-top">
         <div className="d-top__brand">
-          MERODOCTOR <span>· Clinician</span>
+          MERODOCTOR <span>· {isAdmin ? 'Clinician & Admin' : 'Clinician'}</span>
         </div>
         <div className="d-top__actions">
           <button type="button" className="d-iconbtn" onClick={toggleMute} title={muted ? 'Sound off' : 'Sound on'} aria-label="Toggle sound">
             {muted ? '🔕' : '🔔'}
             {stats.pending > 0 ? <span className="d-badge-count">{stats.pending}</span> : null}
           </button>
-          <span className="d-top__who">{profile?.displayName || user?.email}</span>
+          <div className="d-me">
+            <div className="d-me__avatar">
+              <span>{doctorInitials}</span>
+              <span className="d-me__online" title="Online" />
+            </div>
+            <div className="d-me__id">
+              <span className="d-me__name">{doctorName}</span>
+              <span className="d-me__meta">
+                {FEATURED_DOCTOR.specialty}
+                {isAdmin ? <span className="d-me__admin">Administrator</span> : null}
+              </span>
+            </div>
+          </div>
           <button type="button" className="c-btn c-btn--ghost" onClick={() => logout()}>
             Sign out
           </button>

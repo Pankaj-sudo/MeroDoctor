@@ -19,18 +19,20 @@ service cloud.firestore {
         ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
         : 'anonymous';
     }
-    function isStaff() { return role() in ['doctor', 'admin', 'clinic_staff']; }
-    function isAdmin() { return role() == 'admin'; }
-
-    // The practice's registered physician email(s). A self-signup may claim the
-    // 'doctor' role ONLY when the Firebase-verified token email is on this list,
-    // so the Doctor Dashboard can never be reached by spoofing a role client-side.
-    // Add emails here to onboard more doctors.
+    // The practice's registered physician email(s), who are also administrators.
+    // A self-signup may claim the 'doctor' role ONLY when the Firebase-verified
+    // token email is on this list, so the Doctor/Admin Dashboard can never be
+    // reached by spoofing a role client-side. Add emails here to onboard doctors.
     function doctorEmails() { return ['pankaj.ydv707@gmail.com']; }
     function isDoctorEmail() {
       return request.auth != null && request.auth.token.email != null
         && request.auth.token.email.lower() in doctorEmails();
     }
+
+    function isStaff() { return role() in ['doctor', 'admin', 'clinic_staff'] || isDoctorEmail(); }
+    // Administrators: the 'admin' role, or a registered physician email (which is
+    // granted full admin privileges by design).
+    function isAdmin() { return role() == 'admin' || isDoctorEmail(); }
 
     // ------------------------------------------------------------------ users
     match /users/{uid} {

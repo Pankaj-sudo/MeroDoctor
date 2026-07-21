@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Spinner } from '../components/Spinner';
 import type { Role } from '../types/auth';
@@ -24,9 +24,15 @@ function initialsOf(name: string, email: string): string {
  * role dashboards (see HOME_FOR_ROLE in config/roles.ts).
  */
 export function Dashboard() {
-  const { user, profile, role, isVerified, logout } = useAuth();
+  const { user, profile, role, isAdmin, isVerified, logout } = useAuth();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
+
+  // Clinicians never see the patient dashboard — send them to the EMR. This is a
+  // UX redirect; data access is enforced separately by the Firestore rules.
+  if (role === 'doctor' || role === 'clinic_staff' || role === 'admin' || isAdmin) {
+    return <Navigate to="/doctor" replace />;
+  }
 
   const displayName = profile?.displayName || user?.displayName || 'there';
   const email = profile?.email || user?.email || '';

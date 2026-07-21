@@ -22,6 +22,8 @@ export interface UserProfile {
   photoURL: string;
   phoneNumber: string | null;
   role: Role;
+  /** Elevated administrator privileges (in addition to `role`). */
+  isAdmin?: boolean;
   isVerified: boolean;
   status: UserStatus;
   provider: AuthProviderId;
