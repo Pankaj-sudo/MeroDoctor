@@ -12,6 +12,18 @@ import { Login } from './pages/Login';
 // authenticated area and error page are code-split (loaded on demand).
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
 const NotFound = lazy(() => import('./pages/NotFound').then((m) => ({ default: m.NotFound })));
+const ConsultWizard = lazy(() =>
+  import('./pages/consult/ConsultWizard').then((m) => ({ default: m.ConsultWizard })),
+);
+const SuccessScreen = lazy(() =>
+  import('./pages/consult/SuccessScreen').then((m) => ({ default: m.SuccessScreen })),
+);
+const TrackConsultation = lazy(() =>
+  import('./pages/consult/TrackConsultation').then((m) => ({ default: m.TrackConsultation })),
+);
+const ConsultationsList = lazy(() =>
+  import('./pages/consult/ConsultationsList').then((m) => ({ default: m.ConsultationsList })),
+);
 
 /** Sends the visitor to their role home when signed in, otherwise to /login. */
 function RootRedirect() {
@@ -60,6 +72,40 @@ export function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Patient consultation workflow */}
+        <Route
+          path="/consult"
+          element={
+            <ProtectedRoute>
+              <ConsultWizard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/consult/success/:id"
+          element={
+            <ProtectedRoute>
+              <SuccessScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/consultations"
+          element={
+            <ProtectedRoute>
+              <ConsultationsList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/track/:id"
+          element={
+            <ProtectedRoute>
+              <TrackConsultation />
             </ProtectedRoute>
           }
         />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Spinner } from '../components/Spinner';
 import type { Role } from '../types/auth';
@@ -24,6 +25,7 @@ function initialsOf(name: string, email: string): string {
  */
 export function Dashboard() {
   const { user, profile, role, isVerified, logout } = useAuth();
+  const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
 
   const displayName = profile?.displayName || user?.displayName || 'there';
@@ -89,9 +91,28 @@ export function Dashboard() {
         </dl>
 
         <p className="dash__note">
-          You’re signed in. This is where your {role ? ROLE_LABEL[role].toLowerCase() : 'account'}{' '}
-          dashboard will live.
+          Talk to a doctor in minutes. Answer a few questions, pay via eSewa, and track your
+          consultation live.
         </p>
+
+        <div className="dash__cta">
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => navigate('/consult')}
+            style={{ width: '100%' }}
+          >
+            Consult now
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => navigate('/consultations')}
+            style={{ width: '100%' }}
+          >
+            My consultations
+          </button>
+        </div>
       </section>
     </main>
   );
