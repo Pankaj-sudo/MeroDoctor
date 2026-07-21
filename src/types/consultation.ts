@@ -75,6 +75,51 @@ export interface StatusEvent {
   at: Timestamp | null;
 }
 
+export type Priority = 'routine' | 'urgent';
+
+export interface Medication {
+  name: string;
+  dose: string;
+  frequency: string;
+  duration: string;
+}
+
+export interface Prescription {
+  medications: Medication[];
+  advice: string;
+}
+
+/** Clinical documentation the doctor fills in. All optional until entered. */
+export interface Clinical {
+  soapSubjective: string;
+  soapObjective: string;
+  soapAssessment: string;
+  soapPlan: string;
+  diagnosis: string;
+  differential: string;
+  investigations: string;
+  treatmentPlan: string;
+  prescription: Prescription;
+  followUpDate: string;
+  patientInstructions: string;
+}
+
+export function emptyClinical(): Clinical {
+  return {
+    soapSubjective: '',
+    soapObjective: '',
+    soapAssessment: '',
+    soapPlan: '',
+    diagnosis: '',
+    differential: '',
+    investigations: '',
+    treatmentPlan: '',
+    prescription: { medications: [], advice: '' },
+    followUpDate: '',
+    patientInstructions: '',
+  };
+}
+
 export interface Consultation {
   id: string;
   patientId: string;
@@ -88,6 +133,25 @@ export interface Consultation {
   statusHistory: StatusEvent[];
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
+  // ---- doctor side (set as the case is worked) ----
+  priority?: Priority;
+  assignedDoctorId?: string;
+  assignedDoctorName?: string;
+  clinical?: Clinical;
+  paymentReviewedBy?: string;
+  paymentReviewedAt?: Timestamp | null;
+  paymentNote?: string;
+}
+
+/** Audit-trail entry written for every doctor action (activity_logs). */
+export interface ActivityLog {
+  id: string;
+  consultationId: string;
+  actorId: string;
+  actorName: string;
+  action: string;
+  detail: string;
+  at: Timestamp | null;
 }
 
 /** Client-side draft held by the wizard before it is submitted. */

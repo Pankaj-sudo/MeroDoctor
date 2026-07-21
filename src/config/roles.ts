@@ -7,9 +7,9 @@ import type { Role } from '../types/auth';
  */
 export const HOME_FOR_ROLE: Record<Role, string> = {
   patient: '/dashboard',
-  doctor: '/dashboard',
-  clinic_staff: '/dashboard',
-  admin: '/dashboard',
+  doctor: '/doctor',
+  clinic_staff: '/doctor',
+  admin: '/doctor',
 };
 
 /** Safe fallback used before the profile (and thus role) has loaded. */

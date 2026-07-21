@@ -24,6 +24,15 @@ const TrackConsultation = lazy(() =>
 const ConsultationsList = lazy(() =>
   import('./pages/consult/ConsultationsList').then((m) => ({ default: m.ConsultationsList })),
 );
+const DoctorDashboard = lazy(() =>
+  import('./pages/doctor/DoctorDashboard').then((m) => ({ default: m.DoctorDashboard })),
+);
+const ConsultationDetail = lazy(() =>
+  import('./pages/doctor/ConsultationDetail').then((m) => ({ default: m.ConsultationDetail })),
+);
+const PrescriptionPrint = lazy(() =>
+  import('./pages/doctor/PrescriptionPrint').then((m) => ({ default: m.PrescriptionPrint })),
+);
 
 /** Sends the visitor to their role home when signed in, otherwise to /login. */
 function RootRedirect() {
@@ -106,6 +115,32 @@ export function App() {
           element={
             <ProtectedRoute>
               <TrackConsultation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Doctor / admin portal */}
+        <Route
+          path="/doctor"
+          element={
+            <ProtectedRoute allow={['doctor', 'admin', 'clinic_staff']}>
+              <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/consultation/:id"
+          element={
+            <ProtectedRoute allow={['doctor', 'admin', 'clinic_staff']}>
+              <ConsultationDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/consultation/:id/print"
+          element={
+            <ProtectedRoute allow={['doctor', 'admin', 'clinic_staff']}>
+              <PrescriptionPrint />
             </ProtectedRoute>
           }
         />

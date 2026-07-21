@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// MeroDoctor — Firebase Storage rules.
+// Payment screenshots: a patient uploads only under their own uid folder, must
+// be an image under 8 MB (upload validation). Any signed-in user may read (so
+// the treating doctor can view it via the stored URL).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /payment-screenshots/{uid}/{fileName} {
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow read: if request.auth != null;
+    }
+
+    // deny everything else by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// ============================================================================
+// MeroDoctor — Firestore Security Rules
+//   users            — one doc per account; role lives here (source of truth)
+//   consultations    — the patient intake + doctor-managed lifecycle
+//   activity_logs    — immutable audit trail of doctor actions
+// Trust model: patients own their records; doctors/admin/clinic_staff manage
+// consultations. Roles are read from /users/{uid}.role — never client input.
+// ============================================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    function role() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : 'anonymous';
+    }
+    function isStaff() { return role() in ['doctor', 'admin', 'clinic_staff']; }
+    function isAdmin() { return role() == 'admin'; }
+
+    // ------------------------------------------------------------------ users
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      // self-signup may only be a patient (or doctor onboarding); admin set by hand
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.role in ['patient', 'doctor'];
+      allow update: if (isOwner(uid) && request.resource.data.role == resource.data.role
+                        && request.resource.data.uid == resource.data.uid)
+        || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------- consultations
+    match /consultations/{id} {
+      allow read: if isOwner(resource.data.patientId) || isStaff();
+
+      // a patient creates their own consultation, starting at payment_pending
+      allow create: if isSignedIn()
+        && request.resource.data.patientId == request.auth.uid
+        && request.resource.data.status == 'payment_pending';
+
+      // staff drive the whole lifecycle; the patient may ONLY re-touch payment
+      // (e.g. re-upload a screenshot) and can never move their own status/clinical.
+      allow update: if isStaff()
+        || (isOwner(resource.data.patientId)
+            && request.resource.data.patientId == resource.data.patientId
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['payment', 'updatedAt']));
+
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------- audit / activity
+    match /activity_logs/{id} {
+      allow read: if isStaff();
+      allow create: if isStaff() && request.resource.data.actorId == request.auth.uid;
+      allow update, delete: if false; // append-only audit trail
+    }
+
+    // ----------------------------------- future collections (locked by default)
+    match /notifications/{id} { allow read, write: if isStaff(); }
+  }
+}
