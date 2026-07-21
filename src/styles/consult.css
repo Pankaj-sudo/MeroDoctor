@@ -306,18 +306,140 @@
 .c-skel { border-radius: 8px; background: linear-gradient(90deg, rgba(240, 231, 218, 0.05) 25%, rgba(240, 231, 218, 0.12) 37%, rgba(240, 231, 218, 0.05) 63%); background-size: 400% 100%; animation: cShimmer 1.4s ease infinite; }
 @keyframes cShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
+/* ---------- medical history (structured intake) ---------- */
+.mh { display: flex; flex-direction: column; gap: 30px; }
+
+.mh-sec {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 22px 24px;
+  background: linear-gradient(180deg, rgba(240, 231, 218, 0.035), rgba(240, 231, 218, 0.012));
+  backdrop-filter: blur(8px);
+}
+.mh-sec__head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+.mh-sec__badge {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(216, 154, 110, 0.12); border: 1px solid rgba(216, 154, 110, 0.28);
+  color: var(--accent-2);
+}
+.mh-sec__icon { width: 22px; height: 22px; }
+.mh-sec__title { font: 500 22px var(--serif); color: var(--cream-2); margin: 2px 0 0; letter-spacing: -0.01em; }
+.mh-sec__hint { font: 300 13.5px var(--sans); color: var(--muted-2); margin: 3px 0 0; }
+
+.mh-group { display: flex; flex-direction: column; gap: 14px; }
+
+/* search */
+.mh-search {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--line); border-radius: 12px; padding: 0 14px;
+  background: rgba(20, 14, 10, 0.5); transition: border-color 0.2s, box-shadow 0.2s;
+}
+.mh-search:focus-within { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(216, 154, 110, 0.14); }
+.mh-search svg { width: 17px; height: 17px; color: var(--muted-2); flex-shrink: 0; }
+.mh-search__input {
+  flex: 1; border: none; background: none; outline: none;
+  color: var(--cream-2); font: 300 15px var(--sans); padding: 12px 0;
+}
+.mh-search__input::placeholder { color: rgba(185, 168, 143, 0.45); }
+
+/* selectable check-cards */
+.mh-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.mh-card {
+  display: flex; align-items: center; gap: 11px; text-align: left;
+  padding: 13px 15px; border-radius: 13px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(240, 231, 218, 0.03);
+  color: var(--cream); font: 400 14.5px var(--sans);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s, background 0.2s, color 0.2s;
+  animation: mhCardIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mhCardIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.mh-card:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(216, 154, 110, 0.45); }
+.mh-card:disabled { opacity: 0.32; cursor: not-allowed; }
+.mh-card.is-on {
+  background: rgba(216, 154, 110, 0.16); border-color: rgba(216, 154, 110, 0.6);
+  color: var(--accent-2); box-shadow: 0 10px 26px -14px rgba(216, 154, 110, 0.7);
+}
+.mh-card--none.is-on {
+  background: rgba(120, 130, 118, 0.16); border-color: rgba(160, 172, 158, 0.5); color: #cfd6cd;
+}
+.mh-card__check {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px;
+  border: 1.6px solid var(--line); display: flex; align-items: center; justify-content: center;
+  color: transparent; transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+}
+.mh-card__check svg { width: 13px; height: 13px; transform: scale(0.4); opacity: 0; transition: transform 0.22s cubic-bezier(0.34, 1.5, 0.5, 1), opacity 0.18s; }
+.mh-card.is-on .mh-card__check { background: var(--accent); border-color: var(--accent); color: var(--cream-2); }
+.mh-card--none.is-on .mh-card__check { background: #7c8a78; border-color: #7c8a78; }
+.mh-card.is-on .mh-card__check svg { transform: scale(1); opacity: 1; }
+.mh-card__label { line-height: 1.25; }
+
+.mh-other { margin-top: 2px; animation: mhCardIn 0.3s ease both; }
+
+/* single-select pills (lifestyle + surgery yes/no) */
+.mh-pills { display: flex; flex-wrap: wrap; gap: 9px; }
+.mh-pill {
+  padding: 11px 20px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(240, 231, 218, 0.03);
+  color: var(--cream); font: 400 14px var(--sans);
+  transition: transform 0.16s ease, border-color 0.2s, background 0.2s, color 0.2s;
+}
+.mh-pill:hover { transform: translateY(-1px); border-color: rgba(216, 154, 110, 0.45); }
+.mh-pill.is-on {
+  background: var(--accent); border-color: var(--accent); color: var(--cream-2);
+  box-shadow: 0 12px 26px -14px rgba(160, 92, 51, 0.85);
+}
+
+/* allergy sub-groups */
+.mh-sub { display: flex; flex-direction: column; gap: 11px; }
+.mh-sub + .mh-sub { margin-top: 20px; }
+.mh-sub__title { font: 500 12px var(--sans); letter-spacing: 0.11em; text-transform: uppercase; color: var(--accent-2); margin: 0; display: flex; align-items: baseline; gap: 8px; }
+.mh-sub__opt { font-size: 11px; letter-spacing: 0; text-transform: none; color: rgba(138, 122, 102, 0.7); font-weight: 400; }
+
+/* repeaters (surgery + medications) */
+.mh-repeat { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.mh-item {
+  border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+  background: rgba(20, 14, 10, 0.32); animation: mhCardIn 0.35s ease both;
+}
+.mh-item__grid { display: grid; grid-template-columns: 1.4fr 0.8fr 1fr; gap: 10px; }
+.mh-item__grid--4 { grid-template-columns: 1.4fr 0.8fr 1fr 1fr; }
+.mh-remove {
+  margin-top: 10px; background: none; border: none; cursor: pointer;
+  color: var(--muted-2); font: 400 13px var(--sans); text-decoration: underline;
+  text-underline-offset: 3px; padding: 4px 0; transition: color 0.2s;
+}
+.mh-remove:hover { color: var(--danger); }
+.mh-add {
+  align-self: flex-start; margin-top: 12px; cursor: pointer;
+  border: 1px dashed rgba(216, 154, 110, 0.45); border-radius: 12px;
+  background: rgba(216, 154, 110, 0.06); color: var(--accent-2);
+  font: 500 14px var(--sans); padding: 12px 20px; transition: background 0.2s, border-color 0.2s, transform 0.16s;
+}
+.mh-add:hover { background: rgba(216, 154, 110, 0.12); border-color: var(--accent-2); transform: translateY(-1px); }
+.mh-empty { font: 300 14px var(--sans); color: var(--muted-2); margin: 0; }
+
+/* lifestyle rows */
+.mh-life { display: flex; flex-direction: column; gap: 18px; }
+.mh-life__row { display: flex; flex-direction: column; gap: 10px; }
+.mh-life__label { font: 500 12px var(--sans); letter-spacing: 0.11em; text-transform: uppercase; color: var(--accent-2); }
+
 /* ---------- responsive ---------- */
 @media (max-width: 640px) {
   .c-grid { grid-template-columns: 1fr; }
   .c-pay__grid { grid-template-columns: 1fr; }
   .c-sum__row { grid-template-columns: 1fr; gap: 3px; }
   .c-actions .c-btn { flex: 1; padding-left: 16px; padding-right: 16px; }
+  .mh-cards { grid-template-columns: 1fr 1fr; }
+  .mh-item__grid, .mh-item__grid--4 { grid-template-columns: 1fr; }
+  .mh-sec { padding: 18px 16px 20px; }
 }
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   .c-step-anim, .c-card, .c-dot-amber, .c-tl__item.is-current .c-tl__node,
-  .c-check__ring, .c-check__mark, .c-skel { animation: none !important; }
+  .c-check__ring, .c-check__mark, .c-skel, .mh-card, .mh-item, .mh-other { animation: none !important; }
   .c-check__ring, .c-check__mark { stroke-dashoffset: 0 !important; }
-  .c-btn, .c-card, .c-ccard { transition: none !important; }
+  .c-btn, .c-card, .c-ccard, .mh-card, .mh-pill, .mh-add { transition: none !important; }
+  .mh-card.is-on .mh-card__check svg { transform: scale(1); }
 }

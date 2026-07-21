@@ -1,4 +1,5 @@
 import { questionsForSymptom } from '../../../config/symptoms';
+import { summarizeHistory } from '../../../config/medicalHistory';
 import type { ConsultationDraft } from '../../../types/consultation';
 
 function Row({ label, value }: { label: string; value?: string }) {
@@ -84,14 +85,13 @@ export function ReviewStep({
 
       <Section title="Medical history" step={2} onEdit={onEdit}>
         <dl className="c-sum__list">
-          <Row label="Past history" value={draft.history.pastMedical} />
-          <Row label="Surgeries" value={draft.history.surgeries} />
-          <Row label="Food allergies" value={draft.history.foodAllergies} />
-          <Row label="Drug allergies" value={draft.history.drugAllergies} />
-          <Row label="Medications" value={draft.history.medications} />
-          <Row label="Smoking / alcohol" value={[draft.history.smoking, draft.history.alcohol].filter(Boolean).join(' · ')} />
-          <Row label="Notes" value={draft.history.notes} />
+          {summarizeHistory(draft.history).map((r) => (
+            <Row key={r.label} label={r.label} value={r.value} />
+          ))}
         </dl>
+        {summarizeHistory(draft.history).length === 0 ? (
+          <p className="c-sum__empty">Nothing added.</p>
+        ) : null}
       </Section>
     </div>
   );

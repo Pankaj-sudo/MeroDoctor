@@ -37,15 +37,68 @@ export interface SelectedSymptom {
 /** Answers to the dynamic follow-up questions, keyed by question id. */
 export type QuestionnaireAnswers = Record<string, string | string[]>;
 
+/** One prior operation (the surgery repeater). */
+export interface Surgery {
+  name: string;
+  date: string;
+  hospital: string;
+}
+
+/** One medication the patient currently takes (the medication repeater). */
+export interface HistoryMedication {
+  name: string;
+  dose: string;
+  frequency: string;
+  duration: string;
+}
+
+/**
+ * Structured patient history. Multi-select groups store the chosen labels; a
+ * group holding the sentinel 'None' means "explicitly none" (vs. an empty array
+ * = not answered). The `*Other` strings carry the "please specify" free text.
+ */
 export interface MedicalHistory {
-  pastMedical: string;
-  surgeries: string;
-  foodAllergies: string;
-  drugAllergies: string;
-  medications: string;
-  smoking: string; // 'never' | 'former' | 'current'
-  alcohol: string; // 'never' | 'occasional' | 'regular'
-  notes: string;
+  pastMedicalHistory: string[];
+  pastMedicalOther: string;
+  hasSurgery: string; // '' | 'no' | 'yes'
+  surgeries: Surgery[];
+  foodAllergies: string[];
+  foodAllergiesOther: string;
+  drugAllergies: string[];
+  drugAllergiesOther: string;
+  environmentalAllergies: string[];
+  environmentalAllergiesOther: string;
+  otherAllergies: string;
+  currentMedications: HistoryMedication[];
+  smoking: string;
+  alcohol: string;
+  exercise: string;
+  occupation: string;
+  occupationOther: string;
+  additionalNotes: string;
+}
+
+export function emptyMedicalHistory(): MedicalHistory {
+  return {
+    pastMedicalHistory: [],
+    pastMedicalOther: '',
+    hasSurgery: '',
+    surgeries: [],
+    foodAllergies: [],
+    foodAllergiesOther: '',
+    drugAllergies: [],
+    drugAllergiesOther: '',
+    environmentalAllergies: [],
+    environmentalAllergiesOther: '',
+    otherAllergies: '',
+    currentMedications: [],
+    smoking: '',
+    alcohol: '',
+    exercise: '',
+    occupation: '',
+    occupationOther: '',
+    additionalNotes: '',
+  };
 }
 
 export type PaymentStatus = 'pending_verification' | 'verified' | 'rejected';
@@ -179,15 +232,6 @@ export function emptyDraft(prefillEmail = '', prefillName = ''): ConsultationDra
     symptoms: [],
     customComplaint: '',
     answers: {},
-    history: {
-      pastMedical: '',
-      surgeries: '',
-      foodAllergies: '',
-      drugAllergies: '',
-      medications: '',
-      smoking: '',
-      alcohol: '',
-      notes: '',
-    },
+    history: emptyMedicalHistory(),
   };
 }

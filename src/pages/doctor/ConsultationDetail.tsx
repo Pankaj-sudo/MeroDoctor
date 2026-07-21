@@ -15,6 +15,7 @@ import {
   type Actor,
 } from '../../services/doctorService';
 import { questionsForSymptom } from '../../config/symptoms';
+import { summarizeHistory } from '../../config/medicalHistory';
 import { STATUS_META } from '../../config/consultationStatus';
 import { formatNpr } from '../../config/payment';
 import { Field, TextArea, TextInput } from '../../components/consult/fields';
@@ -205,14 +206,13 @@ export function ConsultationDetail() {
             <section className="c-glass d-card">
               <h3 className="d-card__title">Medical history</h3>
               <dl className="c-sum__list">
-                <Row label="Past history" value={c.history.pastMedical} />
-                <Row label="Surgeries" value={c.history.surgeries} />
-                <Row label="Food allergies" value={c.history.foodAllergies} />
-                <Row label="Drug allergies" value={c.history.drugAllergies} />
-                <Row label="Medications" value={c.history.medications} />
-                <Row label="Smoking / alcohol" value={[c.history.smoking, c.history.alcohol].filter(Boolean).join(' · ')} />
-                <Row label="Notes" value={c.history.notes} />
+                {summarizeHistory(c.history).map((r) => (
+                  <Row key={r.label} label={r.label} value={r.value} />
+                ))}
               </dl>
+              {summarizeHistory(c.history).length === 0 ? (
+                <p className="c-sum__empty">No history provided.</p>
+              ) : null}
             </section>
 
             {/* ---- clinical documentation ---- */}
