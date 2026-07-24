@@ -1,0 +1,34 @@
+{
+  // The serverless API is a separate compilation unit from the browser app:
+  // it targets Node (not the DOM) and is built by Vercel, not Vite. The root
+  // tsconfig deliberately only includes `src`, so `npm run typecheck` stays
+  // fast; use `npm run typecheck:api` for this project.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true
+  },
+  // Includes the handful of runtime-dependency-free modules the API shares with
+  // the browser app (join-gate logic, video config, the doctor allow-list) so
+  // there is exactly one implementation of each.
+  "include": [
+    "**/*.ts",
+    "../src/config/video.ts",
+    "../src/config/doctor.ts",
+    "../src/config/payment.ts",
+    "../src/lib/joinWindow.ts",
+    "../src/types/**/*.ts"
+  ]
+}

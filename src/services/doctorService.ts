@@ -13,6 +13,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { createConsultationRoom } from './videoRoomService';
 import type {
   ActivityLog,
   Clinical,
@@ -103,6 +104,55 @@ export function assignToMe(id: string, actor: Actor): Promise<void> {
     status: 'doctor_assigned',
     action: 'Assigned consultation to self',
     fields: { assignedDoctorId: actor.uid, assignedDoctorName: actor.name },
+  });
+}
+
+/**
+ * Approve a consultation for a video call, then provision its room.
+ *
+ * This is the single "doctor approves" action from the booking flow: it assigns
+ * the case, records the approval, optionally schedules it, and asks the
+ * serverless API to create the room. Approval is committed FIRST because the
+ * API refuses to create a room for a consultation that is not yet approved.
+ *
+ * @param scheduledAt when the consultation should start, or `null` for
+ *        "Consult Now" (joining opens immediately).
+ */
+export async function approveForVideoConsultation(
+  id: string,
+  actor: Actor,
+  scheduledAt: Date | null = null,
+): Promise<void> {
+  await transition(id, actor, {
+    status: 'doctor_assigned',
+    action: 'Approved consultation for video call',
+    detail: scheduledAt ? `Scheduled for ${scheduledAt.toLocaleString()}` : 'Consult now',
+    fields: {
+      assignedDoctorId: actor.uid,
+      assignedDoctorName: actor.name,
+      approvedAt: serverTimestamp(),
+      approvedBy: actor.uid,
+      scheduledAt: scheduledAt ? Timestamp.fromDate(scheduledAt) : null,
+    },
+  });
+
+  // Room creation is a separate, retryable step: if the provider is down the
+  // consultation is still approved, and the doctor can retry from the dashboard
+  // via the "Open video room" button.
+  await createConsultationRoom(id);
+  await logActivity(id, actor, 'Opened video consultation room');
+}
+
+/** Reschedule an approved consultation (moves the join window with it). */
+export function rescheduleConsultation(
+  id: string,
+  actor: Actor,
+  scheduledAt: Date | null,
+): Promise<void> {
+  return transition(id, actor, {
+    action: scheduledAt ? 'Rescheduled consultation' : 'Switched to consult now',
+    detail: scheduledAt ? scheduledAt.toLocaleString() : '',
+    fields: { scheduledAt: scheduledAt ? Timestamp.fromDate(scheduledAt) : null },
   });
 }
 

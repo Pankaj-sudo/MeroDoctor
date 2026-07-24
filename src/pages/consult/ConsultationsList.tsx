@@ -4,9 +4,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { subscribePatientConsultations } from '../../services/consultationService';
 import { STATUS_META } from '../../config/consultationStatus';
 import { formatNpr } from '../../config/payment';
+import { VideoStateBadge } from '../../components/video/VideoStateBadge';
 import type { Consultation, PaymentStatus } from '../../types/consultation';
 import type { Timestamp } from 'firebase/firestore';
 import '../../styles/consult.css';
+import '../../styles/video.css';
 
 const PAY_TONE: Record<PaymentStatus, string> = {
   pending_verification: 'amber',
@@ -97,6 +99,9 @@ export function ConsultationsList() {
                 </div>
                 <div className="c-ccard__foot">
                   <span>{fmtDate(c.createdAt)}</span>
+                  {/* Video state — the card itself is the button, so tapping
+                      through to the tracking page is where joining happens. */}
+                  <VideoStateBadge consultation={c} />
                   <span>{formatNpr(c.payment.fee)}</span>
                 </div>
               </button>

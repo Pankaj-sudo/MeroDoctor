@@ -1,4 +1,5 @@
 import type { Timestamp } from 'firebase/firestore';
+import type { VideoProviderId, VideoRoomStatus } from './video';
 
 export type Gender = 'female' | 'male' | 'other';
 
@@ -194,6 +195,24 @@ export interface Consultation {
   paymentReviewedBy?: string;
   paymentReviewedAt?: Timestamp | null;
   paymentNote?: string;
+  // ---- video consultation ----
+  /**
+   * When the video consultation is due to start.
+   *  • `null`/absent → "Consult Now": joining opens the moment the doctor
+   *    approves and the room is created.
+   *  • set → joining opens JOIN_WINDOW_BEFORE_MINUTES before this time.
+   */
+  scheduledAt?: Timestamp | null;
+  /** Set once a room exists. Always equal to the consultation id (1 room : 1
+   *  booking) — its presence is what tells list views a room was provisioned. */
+  videoRoomId?: string;
+  /** Denormalised from `videoRooms/{id}.status` so dashboards can render the
+   *  join state without subscribing to a second collection per row. */
+  videoRoomStatus?: VideoRoomStatus;
+  videoProvider?: VideoProviderId;
+  /** Set by the doctor's "approve" action — the gate for creating a room. */
+  approvedAt?: Timestamp | null;
+  approvedBy?: string;
 }
 
 /** Audit-trail entry written for every doctor action (activity_logs). */
