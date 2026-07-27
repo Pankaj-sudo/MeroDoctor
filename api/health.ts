@@ -34,5 +34,17 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   await probe('_lib/auth', () => import('./_lib/auth.js'));
   await probe('_lib/consultations', () => import('./_lib/consultations.js'));
 
+  // Actually RUN the pieces the endpoints run, to surface the runtime cause
+  // (the module loads fine, but admin() / Firestore may still throw).
+  try {
+    const { admin } = await import('./_lib/firebaseAdmin.js');
+    const { db } = admin(); // initializeApp + cert(private key)
+    out.adminInit = 'ok';
+    const snap = await db.collection('consultations').limit(1).get();
+    out.firestoreRead = `ok (${snap.size} docs)`;
+  } catch (e) {
+    out.runtimeError = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+  }
+
   res.status(200).json(out);
 }
