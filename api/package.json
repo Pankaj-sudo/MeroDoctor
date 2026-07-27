@@ -1,4 +1,0 @@
-{
-  "comment": "Overrides the root package.json's \"type\": \"module\" for the serverless API ONLY. Vercel compiles these functions with transpile-only (not bundling), so under native ESM the extensionless and directory relative imports (./_lib/http, ./providers) fail with ERR_MODULE_NOT_FOUND. CommonJS resolves those the way the local Vite dev server does. The Vite browser app keeps ESM via the root package.json.",
-  "type": "commonjs"
-}

@@ -2,7 +2,6 @@
   "name": "merodoctor-app",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build && cp landing/index.html dist/index.html",
@@ -10,7 +9,7 @@
     "typecheck:api": "tsc --noEmit -p api/tsconfig.json",
     "deploy:rules": "firebase deploy --only firestore:rules,storage",
     "preview": "vite preview",
-    "start": "node server.js"
+    "start": "node server.mjs"
   },
   "engines": {
     "node": ">=18"
