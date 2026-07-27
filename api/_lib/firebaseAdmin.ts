@@ -37,13 +37,36 @@ function requireEnv(name: string): string {
   return value;
 }
 
+/**
+ * Normalise a PEM private key pasted into an env var, tolerating the common
+ * corruptions so `cert()` doesn't fail with an opaque OpenSSL DECODER error:
+ *  - surrounding single/double quotes (Vercel's UI keeps them literally, unlike
+ *    a .env file where the loader strips them),
+ *  - escaped newlines (`\n` or `\r\n`) instead of real ones,
+ *  - Windows CRLF line endings.
+ * The result is a valid multi-line PEM regardless of how it was entered.
+ */
+function normalizePrivateKey(raw: string): string {
+  let key = raw.trim();
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1);
+  }
+  return key
+    .replace(/\\r\\n/g, '\n') // escaped CRLF
+    .replace(/\\n/g, '\n') // escaped LF
+    .replace(/\r\n/g, '\n') // real CRLF
+    .trim();
+}
+
 export function admin(): { app: App; auth: Auth; db: Firestore } {
   if (cached) return cached;
 
   const projectId = requireEnv('FIREBASE_PROJECT_ID');
   const clientEmail = requireEnv('FIREBASE_CLIENT_EMAIL');
-  // Vercel stores newlines escaped; restore them or the PEM parse fails.
-  const privateKey = requireEnv('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n');
+  const privateKey = normalizePrivateKey(requireEnv('FIREBASE_PRIVATE_KEY'));
 
   const app =
     getApps()[0] ?? initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
