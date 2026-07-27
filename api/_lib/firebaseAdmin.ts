@@ -47,17 +47,17 @@ function requireEnv(name: string): string {
  * The result is a valid multi-line PEM regardless of how it was entered.
  */
 function normalizePrivateKey(raw: string): string {
-  let key = raw.trim();
-  if (
-    (key.startsWith('"') && key.endsWith('"')) ||
-    (key.startsWith("'") && key.endsWith("'"))
-  ) {
-    key = key.slice(1, -1);
-  }
-  return key
-    .replace(/\\r\\n/g, '\n') // escaped CRLF
-    .replace(/\\n/g, '\n') // escaped LF
-    .replace(/\r\n/g, '\n') // real CRLF
+  return raw
+    .trim()
+    .replace(/\\r\\n/g, '\n') // escaped CRLF → LF
+    .replace(/\\n/g, '\n') // escaped LF → real LF
+    .replace(/\r\n/g, '\n') // real CRLF → LF
+    .trim()
+    // Strip stray wrapping quotes INDEPENDENTLY at each end: a paste can leave a
+    // leading " with no trailing one (or vice-versa), which the earlier
+    // "both-or-nothing" check missed, corrupting the PEM (DECODER unsupported).
+    .replace(/^["']+/, '')
+    .replace(/["']+$/, '')
     .trim();
 }
 
