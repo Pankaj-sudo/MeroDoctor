@@ -1,8 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Diagnostic probe. Dynamically loads each firebase-admin entry point and
-// reports per-module success/failure, converting the opaque
-// FUNCTION_INVOCATION_FAILED (a module-load crash) into a readable error.
+// Diagnostic probe. Dynamically loads every module the consultation endpoints
+// pull in (firebase-admin, the shared src/* code, and each api/_lib module) and
+// reports which one throws at load — turning the opaque FUNCTION_INVOCATION_FAILED
+// into a precise, readable cause.
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   const out: Record<string, unknown> = {
     ok: true,
@@ -24,9 +25,16 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     }
   };
 
-  await probe('firebase-admin/app', () => import('firebase-admin/app'));
-  await probe('firebase-admin/auth', () => import('firebase-admin/auth'));
-  await probe('firebase-admin/firestore', () => import('firebase-admin/firestore'));
+  // Shared code from src/* (must be safe for a Node/server bundle).
+  await probe('src/config/doctor', () => import('../src/config/doctor'));
+  await probe('src/config/video', () => import('../src/config/video'));
+  await probe('src/lib/joinWindow', () => import('../src/lib/joinWindow'));
+  // The api/_lib chain.
+  await probe('_lib/http', () => import('./_lib/http'));
+  await probe('_lib/firebaseAdmin', () => import('./_lib/firebaseAdmin'));
+  await probe('_lib/providers', () => import('./_lib/providers'));
+  await probe('_lib/auth', () => import('./_lib/auth'));
+  await probe('_lib/consultations', () => import('./_lib/consultations'));
 
   res.status(200).json(out);
 }
