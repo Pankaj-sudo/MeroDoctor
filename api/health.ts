@@ -34,6 +34,28 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   await probe('_lib/auth', () => import('./_lib/auth.js'));
   await probe('_lib/consultations', () => import('./_lib/consultations.js'));
 
+  // Non-secret structural fingerprint of the private key, to diagnose PEM
+  // corruption without ever revealing key material. Only the public PEM header
+  // (first ~27 chars) and boolean/length facts are exposed.
+  const raw = process.env.FIREBASE_PRIVATE_KEY || '';
+  const norm = (() => {
+    let k = raw.trim();
+    if ((k.startsWith('"') && k.endsWith('"')) || (k.startsWith("'") && k.endsWith("'"))) {
+      k = k.slice(1, -1);
+    }
+    return k.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\r\n/g, '\n').trim();
+  })();
+  out.keyShape = {
+    rawLength: raw.length,
+    startsWithQuote: raw.startsWith('"') || raw.startsWith("'"),
+    header27: raw.slice(0, 27), // public PEM header, non-secret
+    hasLiteralBackslashN: raw.includes('\\n'),
+    hasRealNewline: raw.includes('\n'),
+    normStartsWithBegin: norm.startsWith('-----BEGIN PRIVATE KEY-----'),
+    normEndsWithEnd: norm.endsWith('-----END PRIVATE KEY-----'),
+    normLineCount: norm.split('\n').length,
+  };
+
   // Actually RUN the pieces the endpoints run, to surface the runtime cause
   // (the module loads fine, but admin() / Firestore may still throw).
   try {
