@@ -81,8 +81,15 @@ export function withErrorHandling(
         return;
       }
       console.error('[api] unhandled failure', err);
+      // In production the real cause is hidden (it can carry internal detail).
+      // In development we surface it verbatim so a misconfigured key or a bad
+      // Firestore call is diagnosable from the screen, not just the terminal.
+      const isDev = process.env.NODE_ENV !== 'production' && process.env.VERCEL_ENV !== 'production';
+      const detail = err instanceof Error ? err.message : String(err);
       sendJson(res, 500, {
-        error: 'Something went wrong preparing the consultation room.',
+        error: isDev
+          ? `Server error: ${detail}`
+          : 'Something went wrong preparing the consultation room.',
         code: 'server_error',
       });
     }

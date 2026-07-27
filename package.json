@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build && cp landing/index.html dist/index.html",
     "typecheck": "tsc --noEmit",
     "typecheck:api": "tsc --noEmit -p api/tsconfig.json",
+    "deploy:rules": "firebase deploy --only firestore:rules,storage",
     "preview": "vite preview",
     "start": "node server.js"
   },

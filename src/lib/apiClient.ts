@@ -59,10 +59,18 @@ export async function postJson<T>(path: string, body: Record<string, unknown>): 
 
   if (!res.ok) {
     const parsed = (await res.json().catch(() => null)) as ApiErrorBody | null;
+    if (parsed?.error) throw new ApiError(parsed.error, res.status, parsed.code ?? 'server_error');
+
+    // A non-OK response with no JSON body means the request never reached our
+    // handler — the endpoint is missing (404) or the platform errored before
+    // the function ran. Say so plainly: reporting this as a generic failure
+    // sends people hunting for a bug in code that was never executed.
     throw new ApiError(
-      parsed?.error ?? 'Something went wrong. Please try again.',
+      `The consultation service did not respond (HTTP ${res.status} at ${path}). ` +
+        'If you are running locally, make sure the dev server was restarted after ' +
+        'the API was added, and that the server environment variables are set.',
       res.status,
-      parsed?.code ?? 'server_error',
+      res.status === 404 ? 'not_found' : 'server_error',
     );
   }
 

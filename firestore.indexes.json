@@ -1,0 +1,5 @@
+{
+  "comment": "No composite indexes are required. Every query in the app filters by a single field (patientId / consultationId) and sorts client-side, which uses only Firestore's automatic single-field indexes. If you ever add a query that filters AND orders on different fields, Firestore's error will link a one-click 'create index' page — paste the generated entry here and redeploy.",
+  "indexes": [],
+  "fieldOverrides": []
+}
