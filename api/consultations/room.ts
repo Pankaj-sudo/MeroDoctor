@@ -109,7 +109,9 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     startedAt: null,
     endedAt: null,
     createdBy: user.uid,
-    error: FieldValue.delete(),
+    // No `error` field: this is a full set() (not a merge), so it overwrites the
+    // whole document and any error from a prior failed attempt is already gone.
+    // (FieldValue.delete() is illegal in a plain set() and would crash the write.)
   });
   batch.update(consultationRef, {
     videoRoomId: consultationId,
