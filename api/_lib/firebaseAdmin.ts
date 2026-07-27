@@ -61,12 +61,57 @@ function normalizePrivateKey(raw: string): string {
     .trim();
 }
 
+interface ServiceAccountFields {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
+}
+
+/**
+ * Resolve the service-account credentials. Prefers a single base64-encoded
+ * service-account JSON (FIREBASE_SERVICE_ACCOUNT_B64) — one clean line that
+ * cannot be corrupted by quote/newline paste artifacts — and falls back to the
+ * three individual FIREBASE_* vars (with tolerant private-key parsing).
+ */
+function resolveServiceAccount(): ServiceAccountFields {
+  const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
+  if (b64) {
+    let json: { project_id?: string; client_email?: string; private_key?: string };
+    try {
+      json = JSON.parse(Buffer.from(b64.trim(), 'base64').toString('utf8'));
+    } catch (err) {
+      throw new HttpError(
+        500,
+        'server_error',
+        'FIREBASE_SERVICE_ACCOUNT_B64 is set but is not valid base64-encoded JSON. ' +
+          `Re-encode the service-account file: base64 -i serviceAccount.json (${String(err)}).`,
+      );
+    }
+    if (!json.project_id || !json.client_email || !json.private_key) {
+      throw new HttpError(
+        500,
+        'server_error',
+        'FIREBASE_SERVICE_ACCOUNT_B64 decoded but is missing project_id / client_email / private_key.',
+      );
+    }
+    return {
+      projectId: json.project_id,
+      clientEmail: json.client_email,
+      privateKey: normalizePrivateKey(json.private_key),
+    };
+  }
+
+  return {
+    projectId: requireEnv('FIREBASE_PROJECT_ID'),
+    clientEmail: requireEnv('FIREBASE_CLIENT_EMAIL'),
+    privateKey: normalizePrivateKey(requireEnv('FIREBASE_PRIVATE_KEY')),
+  };
+}
+
 export function admin(): { app: App; auth: Auth; db: Firestore } {
   if (cached) return cached;
 
-  const projectId = requireEnv('FIREBASE_PROJECT_ID');
-  const clientEmail = requireEnv('FIREBASE_CLIENT_EMAIL');
-  const privateKey = normalizePrivateKey(requireEnv('FIREBASE_PRIVATE_KEY'));
+  const { projectId, clientEmail, privateKey } = resolveServiceAccount();
 
   const app =
     getApps()[0] ?? initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });

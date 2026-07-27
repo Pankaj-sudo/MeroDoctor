@@ -10,6 +10,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     node: process.version,
     env: {
       dailyKey: Boolean(process.env.DAILY_API_KEY),
+      serviceAccountB64: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_B64),
       projectId: Boolean(process.env.FIREBASE_PROJECT_ID),
       clientEmail: Boolean(process.env.FIREBASE_CLIENT_EMAIL),
       privateKeyPem: (process.env.FIREBASE_PRIVATE_KEY || '').includes('BEGIN PRIVATE KEY'),
