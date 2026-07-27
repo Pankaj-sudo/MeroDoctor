@@ -1,19 +1,32 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Diagnostic probe: ZERO runtime imports (the @vercel/node import is types-only,
-// erased at build). If this 200s but the consultation endpoints 500 with
-// FUNCTION_INVOCATION_FAILED, the Node runtime is fine and the crash is in a
-// dependency (firebase-admin). If this ALSO fails, the function build/runtime
-// config itself is the problem. Safe to leave in — it exposes no data.
-export default function handler(_req: VercelRequest, res: VercelResponse) {
-  res.status(200).json({
+// Diagnostic probe. Dynamically loads each firebase-admin entry point and
+// reports per-module success/failure, converting the opaque
+// FUNCTION_INVOCATION_FAILED (a module-load crash) into a readable error.
+export default async function handler(_req: VercelRequest, res: VercelResponse) {
+  const out: Record<string, unknown> = {
     ok: true,
     node: process.version,
-    hasDailyKey: Boolean(process.env.DAILY_API_KEY),
-    hasFirebaseProjectId: Boolean(process.env.FIREBASE_PROJECT_ID),
-    hasFirebaseClientEmail: Boolean(process.env.FIREBASE_CLIENT_EMAIL),
-    hasFirebasePrivateKey: Boolean(process.env.FIREBASE_PRIVATE_KEY),
-    privateKeyLooksPem:
-      (process.env.FIREBASE_PRIVATE_KEY || '').includes('BEGIN PRIVATE KEY'),
-  });
+    env: {
+      dailyKey: Boolean(process.env.DAILY_API_KEY),
+      projectId: Boolean(process.env.FIREBASE_PROJECT_ID),
+      clientEmail: Boolean(process.env.FIREBASE_CLIENT_EMAIL),
+      privateKeyPem: (process.env.FIREBASE_PRIVATE_KEY || '').includes('BEGIN PRIVATE KEY'),
+    },
+  };
+
+  const probe = async (name: string, load: () => Promise<unknown>) => {
+    try {
+      await load();
+      out[name] = 'ok';
+    } catch (e) {
+      out[name] = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    }
+  };
+
+  await probe('firebase-admin/app', () => import('firebase-admin/app'));
+  await probe('firebase-admin/auth', () => import('firebase-admin/auth'));
+  await probe('firebase-admin/firestore', () => import('firebase-admin/firestore'));
+
+  res.status(200).json(out);
 }
