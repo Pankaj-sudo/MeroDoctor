@@ -5,9 +5,11 @@ import { subscribeAllConsultations } from '../../services/doctorService';
 import { STATUS_META } from '../../config/consultationStatus';
 import { formatNpr } from '../../config/payment';
 import { FEATURED_DOCTOR } from '../../config/doctor';
+import { VideoStateBadge } from '../../components/video/VideoStateBadge';
 import type { Consultation, ConsultationStatus } from '../../types/consultation';
 import '../../styles/consult.css';
 import '../../styles/doctor.css';
+import '../../styles/video.css';
 
 type Filter = 'all' | 'pending' | 'waiting' | 'active' | 'completed';
 
@@ -252,6 +254,10 @@ export function DoctorDashboard() {
                   </div>
                 </div>
                 <div className="d-row__meta">
+                  {/* Video state at a glance. Non-interactive by design: the
+                      row is itself a button, so the actual Join control lives
+                      on the detail page this navigates to. */}
+                  <VideoStateBadge consultation={c} />
                   {c.payment.status === 'pending_verification' ? (
                     <span className="c-badge c-badge--amber">Payment to verify</span>
                   ) : (

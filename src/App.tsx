@@ -24,6 +24,11 @@ const TrackConsultation = lazy(() =>
 const ConsultationsList = lazy(() =>
   import('./pages/consult/ConsultationsList').then((m) => ({ default: m.ConsultationsList })),
 );
+// The consultation room is the heaviest route (it pulls in the video SDK on
+// join), so keeping it code-split matters more here than anywhere else.
+const ConsultationRoom = lazy(() =>
+  import('./pages/consult/ConsultationRoom').then((m) => ({ default: m.ConsultationRoom })),
+);
 const DoctorDashboard = lazy(() =>
   import('./pages/doctor/DoctorDashboard').then((m) => ({ default: m.DoctorDashboard })),
 );
@@ -115,6 +120,21 @@ export function App() {
           element={
             <ProtectedRoute>
               <TrackConsultation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/*
+          The video consultation room. Shared by BOTH sides of the call, so it
+          carries no role restriction — the page and the serverless join
+          endpoint each verify that the viewer is the assigned patient or the
+          assigned clinician, which is a stronger check than a role gate.
+        */}
+        <Route
+          path="/consultation/:id/room"
+          element={
+            <ProtectedRoute>
+              <ConsultationRoom />
             </ProtectedRoute>
           }
         />

@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { subscribeConsultation } from '../../services/consultationService';
 import {
   advanceStatus,
+  approveForVideoConsultation,
   assignToMe,
   markCompleted,
   publishPrescription,
@@ -22,8 +23,10 @@ import { Field, TextArea, TextInput } from '../../components/consult/fields';
 import { emptyClinical } from '../../types/consultation';
 import type { ActivityLog, Clinical, Consultation } from '../../types/consultation';
 import type { Timestamp } from 'firebase/firestore';
+import { JoinConsultationButton } from '../../components/video/JoinConsultationButton';
 import '../../styles/consult.css';
 import '../../styles/doctor.css';
+import '../../styles/video.css';
 
 function fmt(ts: Timestamp | null | undefined): string {
   if (!ts) return '';
@@ -304,9 +307,18 @@ export function ConsultationDetail() {
               <h3 className="d-card__title">Workflow</h3>
               <div className="d-flow">
                 {!assigned ? (
-                  <button type="button" className="c-btn c-btn--primary" disabled={busy !== '' || paid !== 'verified'} onClick={() => run('assign', () => assignToMe(id, actor))}>
-                    {paid !== 'verified' ? 'Verify payment first' : 'Assign to me'}
-                  </button>
+                  <>
+                    <button type="button" className="c-btn c-btn--primary" disabled={busy !== '' || paid !== 'verified'} onClick={() => run('assign', () => assignToMe(id, actor))}>
+                      {paid !== 'verified' ? 'Verify payment first' : 'Assign to me'}
+                    </button>
+                    {/* The booking flow's "doctor approves" step: assigns the
+                        case AND provisions the video room in one action. */}
+                    {paid === 'verified' ? (
+                      <button type="button" className="c-btn c-btn--primary" disabled={busy !== ''} onClick={() => run('approve', () => approveForVideoConsultation(id, actor, null))}>
+                        {busy === 'approve' ? 'Approving…' : 'Approve & open video room'}
+                      </button>
+                    ) : null}
+                  </>
                 ) : (
                   <p className="d-flow__assigned">Assigned to <strong>{c.assignedDoctorName}</strong></p>
                 )}
@@ -321,6 +333,23 @@ export function ConsultationDetail() {
                 {done ? <p className="d-flow__assigned">This consultation is complete.</p> : null}
               </div>
             </section>
+
+            {/* Video consultation. Provisioning the room is a separate,
+                retryable step from assignment, so a provider outage never
+                blocks the clinical workflow. */}
+            {assigned && !done ? (
+              <section className="c-glass d-card">
+                <h3 className="d-card__title">Video consultation</h3>
+                <div className="d-video">
+                  <p className="d-video__note">
+                    {c.scheduledAt
+                      ? `Scheduled for ${c.scheduledAt.toDate().toLocaleString()}`
+                      : 'Consult now — the room opens as soon as it is created.'}
+                  </p>
+                  <JoinConsultationButton consultation={c} isDoctorSide />
+                </div>
+              </section>
+            ) : null}
 
             <section className="c-glass d-card">
               <h3 className="d-card__title">Activity log</h3>

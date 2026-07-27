@@ -79,6 +79,65 @@ service cloud.firestore {
       allow update, delete: if false; // append-only audit trail
     }
 
+    // ------------------------------------------------------------ videoRooms
+    // One document per booking; the document id IS the consultation id, which
+    // makes "exactly one room per consultation" a structural guarantee.
+    //
+    // Writes are SERVER-ONLY. Room creation, join-token minting and teardown
+    // all happen in the serverless API using the Admin SDK (which bypasses
+    // these rules), because they require the provider's secret API key. Denying
+    // all client writes means a patient can never fabricate a room, extend an
+    // expiry, or resurrect an ended consultation.
+    //
+    // Reading is limited to the two participants. Note the room URL is not a
+    // credential on its own: rooms are private at the provider and joining
+    // requires a server-minted, identity-scoped token.
+    match /videoRooms/{consultationId} {
+      // `resource == null` covers the NORMAL "no room yet" case: without it, a
+      // read of a not-yet-created room evaluates resource.data on null and is
+      // denied, so the client would see a permission error instead of an empty
+      // result on every unapproved consultation. A missing document carries no
+      // data, so permitting it leaks nothing.
+      allow read: if isSignedIn()
+        && (resource == null
+            || request.auth.uid in resource.data.participantIds
+            || isStaff());
+      allow write: if false; // Admin SDK only — see api/consultations/*
+    }
+
+    // -------------------------------------------------- consultationMessages
+    // In-consultation chat. `participantIds` is denormalised onto every message
+    // so a read can be authorised without a get() on the consultation for each
+    // document — that keeps a live chat subscription cheap AND enforceable.
+    match /consultationMessages/{id} {
+      allow read: if isSignedIn()
+        && (request.auth.uid in resource.data.participantIds || isStaff());
+
+      // A sender may only ever write as themselves, and only into a thread they
+      // belong to. Text is bounded so the collection can't be used as storage.
+      allow create: if isSignedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && (request.auth.uid in request.resource.data.participantIds || isStaff())
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && request.resource.data.senderRole in ['patient', 'doctor'];
+
+      // Clinical records are immutable — an edited transcript is worthless.
+      allow update, delete: if false;
+    }
+
+    // ---------------------------------------------------- consultationEvents
+    // Presence + call audit trail (joined/left/connection/ended).
+    match /consultationEvents/{id} {
+      allow read: if isSignedIn()
+        && (request.auth.uid in resource.data.participantIds || isStaff());
+      allow create: if isSignedIn()
+        && request.resource.data.actorId == request.auth.uid
+        && (request.auth.uid in request.resource.data.participantIds || isStaff());
+      allow update, delete: if false; // append-only
+    }
+
     // ----------------------------------- future collections (locked by default)
     match /notifications/{id} { allow read, write: if isStaff(); }
   }

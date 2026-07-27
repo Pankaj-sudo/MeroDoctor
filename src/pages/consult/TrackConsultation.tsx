@@ -3,9 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { subscribeConsultation } from '../../services/consultationService';
 import { STATUS_META, STATUS_ORDER, statusIndex } from '../../config/consultationStatus';
 import { formatNpr } from '../../config/payment';
+import { isJoinableStatus } from '../../config/video';
+import { JoinConsultationButton } from '../../components/video/JoinConsultationButton';
 import type { Consultation, ConsultationStatus, PaymentStatus } from '../../types/consultation';
 import type { Timestamp } from 'firebase/firestore';
 import '../../styles/consult.css';
+import '../../styles/video.css';
 
 const PAYMENT: Record<PaymentStatus, { label: string; tone: string }> = {
   pending_verification: { label: 'Payment pending verification', tone: 'amber' },
@@ -104,6 +107,22 @@ export function TrackConsultation() {
               <span className="c-track__fee">{formatNpr(c.payment.fee)}</span>
             </div>
           </div>
+
+          {/* Video consultation — appears as soon as the doctor approves the
+              case, and shows a live countdown for a scheduled appointment. */}
+          {isJoinableStatus(c.status) ? (
+            <div className="c-glass c-track__video">
+              <div>
+                <h2 className="c-track__videotitle">Your video consultation</h2>
+                <p className="c-track__videonote">
+                  {c.assignedDoctorName
+                    ? `With ${c.assignedDoctorName}`
+                    : 'Your clinician will join from their side.'}
+                </p>
+              </div>
+              <JoinConsultationButton consultation={c} isDoctorSide={false} />
+            </div>
+          ) : null}
 
           <ol className="c-timeline">
             {STATUS_ORDER.map((s, i) => {
