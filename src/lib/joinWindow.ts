@@ -3,9 +3,9 @@ import {
   JOIN_WINDOW_BEFORE_MS,
   isClosedStatus,
   isJoinableStatus,
-} from '../config/video';
-import type { Consultation, ConsultationStatus } from '../types/consultation';
-import type { JoinWindow, VideoRoomStatus } from '../types/video';
+} from '../config/video.js';
+import type { Consultation, ConsultationStatus } from '../types/consultation.js';
+import type { JoinWindow, VideoRoomStatus } from '../types/video.js';
 
 // ============================================================================
 // The join gate — one pure function, used everywhere.

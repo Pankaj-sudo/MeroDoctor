@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { ROOM_TTL_MINUTES } from '../../src/config/video';
-import { authenticate, isStaff } from '../_lib/auth';
+import { ROOM_TTL_MINUTES } from '../../src/config/video.js';
+import { authenticate, isStaff } from '../_lib/auth.js';
 import {
   CONSULTATIONS,
   CONSULTATION_EVENTS,
@@ -9,11 +9,11 @@ import {
   loadConsultation,
   loadRoom,
   mintRoomName,
-} from '../_lib/consultations';
-import { admin } from '../_lib/firebaseAdmin';
-import { conflict, forbidden, requireMethod, requireString, sendJson, withErrorHandling } from '../_lib/http';
-import { defaultProviderId, getRoomProvider } from '../_lib/providers';
-import { isJoinableStatus } from '../../src/config/video';
+} from '../_lib/consultations.js';
+import { admin } from '../_lib/firebaseAdmin.js';
+import { conflict, forbidden, requireMethod, requireString, sendJson, withErrorHandling } from '../_lib/http.js';
+import { defaultProviderId, getRoomProvider } from '../_lib/providers/index.js';
+import { isJoinableStatus } from '../../src/config/video.js';
 
 // ============================================================================
 // POST /api/consultations/room — provision the video room for a consultation.

@@ -1,4 +1,4 @@
-import type { VideoProviderId } from '../../../src/types/video';
+import type { VideoProviderId } from '../../../src/types/video.js';
 
 // ============================================================================
 // RoomProvider — the server-side half of the video abstraction.

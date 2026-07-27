@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { FieldValue } from 'firebase-admin/firestore';
-import { JOIN_TOKEN_TTL_MINUTES } from '../../src/config/video';
-import { authenticate } from '../_lib/auth';
+import { JOIN_TOKEN_TTL_MINUTES } from '../../src/config/video.js';
+import { authenticate } from '../_lib/auth.js';
 import {
   CONSULTATIONS,
   VIDEO_ROOMS,
@@ -9,10 +9,10 @@ import {
   assertParticipant,
   loadConsultation,
   loadRoom,
-} from '../_lib/consultations';
-import { admin } from '../_lib/firebaseAdmin';
-import { forbidden, notFound, requireMethod, requireString, sendJson, withErrorHandling } from '../_lib/http';
-import { getRoomProvider } from '../_lib/providers';
+} from '../_lib/consultations.js';
+import { admin } from '../_lib/firebaseAdmin.js';
+import { forbidden, notFound, requireMethod, requireString, sendJson, withErrorHandling } from '../_lib/http.js';
+import { getRoomProvider } from '../_lib/providers/index.js';
 
 // ============================================================================
 // POST /api/consultations/join — mint a short-lived join credential.

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ProviderError } from './providers/types';
+import { ProviderError } from './providers/types.js';
 
 // ============================================================================
 // Small HTTP helpers shared by every route: consistent JSON envelopes, a single

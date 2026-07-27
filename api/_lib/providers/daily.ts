@@ -1,5 +1,5 @@
-import { ProviderError } from './types';
-import type { CreateRoomInput, CreatedRoom, IssueTokenInput, RoomProvider } from './types';
+import { ProviderError } from './types.js';
+import type { CreateRoomInput, CreatedRoom, IssueTokenInput, RoomProvider } from './types.js';
 
 // ============================================================================
 // Daily.co implementation of RoomProvider.

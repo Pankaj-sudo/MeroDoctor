@@ -1,8 +1,8 @@
 import type { VercelRequest } from '@vercel/node';
-import { isDoctorEmail } from '../../src/config/doctor';
-import type { Role } from '../../src/types/auth';
-import { admin } from './firebaseAdmin';
-import { unauthenticated } from './http';
+import { isDoctorEmail } from '../../src/config/doctor.js';
+import type { Role } from '../../src/types/auth.js';
+import { admin } from './firebaseAdmin.js';
+import { unauthenticated } from './http.js';
 
 // ============================================================================
 // Request authentication.

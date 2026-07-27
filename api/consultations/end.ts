@@ -1,16 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { FieldValue } from 'firebase-admin/firestore';
-import { authenticate, isStaff } from '../_lib/auth';
+import { authenticate, isStaff } from '../_lib/auth.js';
 import {
   CONSULTATIONS,
   CONSULTATION_EVENTS,
   VIDEO_ROOMS,
   loadConsultation,
   loadRoom,
-} from '../_lib/consultations';
-import { admin } from '../_lib/firebaseAdmin';
-import { forbidden, requireMethod, requireString, sendJson, withErrorHandling } from '../_lib/http';
-import { getRoomProvider } from '../_lib/providers';
+} from '../_lib/consultations.js';
+import { admin } from '../_lib/firebaseAdmin.js';
+import { forbidden, requireMethod, requireString, sendJson, withErrorHandling } from '../_lib/http.js';
+import { getRoomProvider } from '../_lib/providers/index.js';
 
 // ============================================================================
 // POST /api/consultations/end — close the room for good.

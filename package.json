@@ -2,6 +2,7 @@
   "name": "merodoctor-app",
   "private": true,
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build && cp landing/index.html dist/index.html",

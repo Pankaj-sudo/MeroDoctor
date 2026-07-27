@@ -1,4 +1,4 @@
-import { CONSULTATION_FEE, formatNpr } from './payment';
+import { CONSULTATION_FEE, formatNpr } from './payment.js';
 
 // ============================================================================
 // MeroDoctor — the practice's physician(s). Single source of truth for who the

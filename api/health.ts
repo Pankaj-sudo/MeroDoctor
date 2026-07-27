@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Diagnostic probe. Dynamically loads every module the consultation endpoints
-// pull in (firebase-admin, the shared src/* code, and each api/_lib module) and
-// reports which one throws at load — turning the opaque FUNCTION_INVOCATION_FAILED
-// into a precise, readable cause.
+// pull in and reports which (if any) throws at load — turning an opaque
+// FUNCTION_INVOCATION_FAILED into a precise, readable cause. Uses explicit .js
+// specifiers to match native-ESM resolution on Vercel.
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   const out: Record<string, unknown> = {
     ok: true,
@@ -25,16 +25,14 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     }
   };
 
-  // Shared code from src/* (must be safe for a Node/server bundle).
-  await probe('src/config/doctor', () => import('../src/config/doctor'));
-  await probe('src/config/video', () => import('../src/config/video'));
-  await probe('src/lib/joinWindow', () => import('../src/lib/joinWindow'));
-  // The api/_lib chain.
-  await probe('_lib/http', () => import('./_lib/http'));
-  await probe('_lib/firebaseAdmin', () => import('./_lib/firebaseAdmin'));
-  await probe('_lib/providers', () => import('./_lib/providers'));
-  await probe('_lib/auth', () => import('./_lib/auth'));
-  await probe('_lib/consultations', () => import('./_lib/consultations'));
+  await probe('src/config/doctor', () => import('../src/config/doctor.js'));
+  await probe('src/config/video', () => import('../src/config/video.js'));
+  await probe('src/lib/joinWindow', () => import('../src/lib/joinWindow.js'));
+  await probe('_lib/http', () => import('./_lib/http.js'));
+  await probe('_lib/firebaseAdmin', () => import('./_lib/firebaseAdmin.js'));
+  await probe('_lib/providers', () => import('./_lib/providers/index.js'));
+  await probe('_lib/auth', () => import('./_lib/auth.js'));
+  await probe('_lib/consultations', () => import('./_lib/consultations.js'));
 
   res.status(200).json(out);
 }

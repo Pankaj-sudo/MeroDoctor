@@ -1,11 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import type { Firestore, Timestamp } from 'firebase-admin/firestore';
-import { evaluateJoinWindowFrom } from '../../src/lib/joinWindow';
-import type { ConsultationStatus } from '../../src/types/consultation';
-import type { VideoProviderId, VideoRoomStatus } from '../../src/types/video';
-import { forbidden, notFound, type HttpError } from './http';
-import type { AuthedUser } from './auth';
-import { isStaff } from './auth';
+import { evaluateJoinWindowFrom } from '../../src/lib/joinWindow.js';
+import type { ConsultationStatus } from '../../src/types/consultation.js';
+import type { VideoProviderId, VideoRoomStatus } from '../../src/types/video.js';
+import { forbidden, notFound, type HttpError } from './http.js';
+import type { AuthedUser } from './auth.js';
+import { isStaff } from './auth.js';
 
 // ============================================================================
 // Consultation access control — the security boundary for every video route.

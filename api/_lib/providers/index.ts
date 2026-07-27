@@ -1,8 +1,8 @@
-import { DEFAULT_VIDEO_PROVIDER } from '../../../src/config/video';
-import type { VideoProviderId } from '../../../src/types/video';
-import { createDailyProvider } from './daily';
-import { ProviderError } from './types';
-import type { RoomProvider } from './types';
+import { DEFAULT_VIDEO_PROVIDER } from '../../../src/config/video.js';
+import type { VideoProviderId } from '../../../src/types/video.js';
+import { createDailyProvider } from './daily.js';
+import { ProviderError } from './types.js';
+import type { RoomProvider } from './types.js';
 
 // ============================================================================
 // Provider registry. `getRoomProvider()` resolves the provider to use, so a
