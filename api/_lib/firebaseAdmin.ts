@@ -78,7 +78,15 @@ function resolveServiceAccount(): ServiceAccountFields {
   if (b64) {
     let json: { project_id?: string; client_email?: string; private_key?: string };
     try {
-      json = JSON.parse(Buffer.from(b64.trim(), 'base64').toString('utf8'));
+      // Strip ALL whitespace first: `base64` on macOS wraps output at 76 cols,
+      // and copy/paste can inject spaces or newlines — none of which are part of
+      // the value. Also drop any wrapping quotes a paste may have added.
+      const clean = b64.replace(/\s+/g, '').replace(/^["']+|["']+$/g, '');
+      const decoded = Buffer.from(clean, 'base64').toString('utf8');
+      if (!decoded.trimStart().startsWith('{')) {
+        throw new Error('decoded value is not JSON (did the base64 get truncated on paste?)');
+      }
+      json = JSON.parse(decoded);
     } catch (err) {
       throw new HttpError(
         500,
