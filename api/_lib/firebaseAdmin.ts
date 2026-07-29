@@ -78,21 +78,30 @@ function resolveServiceAccount(): ServiceAccountFields {
   if (b64) {
     let json: { project_id?: string; client_email?: string; private_key?: string };
     try {
-      // Strip ALL whitespace first: `base64` on macOS wraps output at 76 cols,
-      // and copy/paste can inject spaces or newlines — none of which are part of
-      // the value. Also drop any wrapping quotes a paste may have added.
-      const clean = b64.replace(/\s+/g, '').replace(/^["']+|["']+$/g, '');
-      const decoded = Buffer.from(clean, 'base64').toString('utf8');
+      const trimmed = b64.trim().replace(/^["']+|["']+$/g, '');
+      // Accept EITHER form in this var, since both are common pastes:
+      //  • raw service-account JSON (starts with "{"), or
+      //  • base64-encoded JSON.
+      // For base64, strip all whitespace first — macOS `base64` wraps output at
+      // 76 cols and paste can inject spaces/newlines, none of which are part of
+      // the value.
+      let decoded: string;
+      if (trimmed.startsWith('{')) {
+        decoded = trimmed;
+      } else {
+        decoded = Buffer.from(trimmed.replace(/\s+/g, ''), 'base64').toString('utf8');
+      }
       if (!decoded.trimStart().startsWith('{')) {
-        throw new Error('decoded value is not JSON (did the base64 get truncated on paste?)');
+        throw new Error('value is neither JSON nor base64-encoded JSON (truncated on paste?)');
       }
       json = JSON.parse(decoded);
     } catch (err) {
       throw new HttpError(
         500,
         'server_error',
-        'FIREBASE_SERVICE_ACCOUNT_B64 is set but is not valid base64-encoded JSON. ' +
-          `Re-encode the service-account file: base64 -i serviceAccount.json (${String(err)}).`,
+        'FIREBASE_SERVICE_ACCOUNT_B64 is set but is not valid. Paste EITHER the raw ' +
+          'service-account JSON, or its base64 (base64 -i serviceAccount.json | tr -d "\\n"). ' +
+          `(${String(err)})`,
       );
     }
     if (!json.project_id || !json.client_email || !json.private_key) {
