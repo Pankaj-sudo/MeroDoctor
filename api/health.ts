@@ -35,6 +35,21 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   await probe('_lib/auth', () => import('./_lib/auth.js'));
   await probe('_lib/consultations', () => import('./_lib/consultations.js'));
 
+  // Non-secret fingerprint of the base64 service-account var. The first ~16
+  // base64 chars only encode the JSON preamble ({"type": "service_accou…), never
+  // key material — safe to expose to diagnose a bad/truncated paste. The CORRECT
+  // value is 3184 chars and starts with "ewogICJ0eXBl".
+  const b64raw = process.env.FIREBASE_SERVICE_ACCOUNT_B64 || '';
+  const b64clean = b64raw.replace(/\s+/g, '').replace(/^["']+|["']+$/g, '');
+  out.b64Shape = {
+    rawLength: b64raw.length,
+    cleanLength: b64clean.length,
+    first16: b64clean.slice(0, 16),
+    last8: b64clean.slice(-8),
+    expectedFirst16: 'ewogICJ0eXBljog'.slice(0, 16),
+    matchesExpectedStart: b64clean.startsWith('ewogICJ0eXBl'),
+  };
+
   // Non-secret structural fingerprint of the private key, to diagnose PEM
   // corruption without ever revealing key material. Only the public PEM header
   // (first ~27 chars) and boolean/length facts are exposed.
