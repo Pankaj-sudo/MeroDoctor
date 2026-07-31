@@ -14,6 +14,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { createConsultationRoom } from './videoRoomService';
+import {
+  ensureConversation,
+  startFollowUpWindow,
+  syncConversationStatus,
+} from './conversationService';
 import type {
   ActivityLog,
   Clinical,
@@ -99,12 +104,14 @@ export function requestNewScreenshot(id: string, actor: Actor, note: string): Pr
 }
 
 // ---- workflow ----
-export function assignToMe(id: string, actor: Actor): Promise<void> {
-  return transition(id, actor, {
+export async function assignToMe(id: string, actor: Actor): Promise<void> {
+  await transition(id, actor, {
     status: 'doctor_assigned',
     action: 'Assigned consultation to self',
     fields: { assignedDoctorId: actor.uid, assignedDoctorName: actor.name },
   });
+  // Assignment opens the doctor↔patient messaging channel for this booking.
+  await ensureConversation(id, { uid: actor.uid, name: actor.name });
 }
 
 /**
@@ -136,6 +143,9 @@ export async function approveForVideoConsultation(
     },
   });
 
+  // Approval opens the persistent messaging channel for this booking.
+  await ensureConversation(id, { uid: actor.uid, name: actor.name });
+
   // Room creation is a separate, retryable step: if the provider is down the
   // consultation is still approved, and the doctor can retry from the dashboard
   // via the "Open video room" button.
@@ -156,17 +166,21 @@ export function rescheduleConsultation(
   });
 }
 
-export function advanceStatus(
+export async function advanceStatus(
   id: string,
   actor: Actor,
   status: ConsultationStatus,
   action: string,
 ): Promise<void> {
-  return transition(id, actor, { status, action });
+  await transition(id, actor, { status, action });
+  await syncConversationStatus(id, status);
 }
 
-export function markCompleted(id: string, actor: Actor): Promise<void> {
-  return transition(id, actor, { status: 'completed', action: 'Marked consultation completed' });
+export async function markCompleted(id: string, actor: Actor): Promise<void> {
+  await transition(id, actor, { status: 'completed', action: 'Marked consultation completed' });
+  // Open the complimentary 7-day follow-up window; after it, the conversation is
+  // read-only (enforced by the Firestore rules as well as the UI).
+  await startFollowUpWindow(id);
 }
 
 // ---- clinical documentation ----
@@ -175,12 +189,17 @@ export function saveClinical(id: string, actor: Actor, clinical: Clinical): Prom
 }
 
 /** Save clinical notes and mark the prescription ready (patient can view it). */
-export function publishPrescription(id: string, actor: Actor, clinical: Clinical): Promise<void> {
-  return transition(id, actor, {
+export async function publishPrescription(
+  id: string,
+  actor: Actor,
+  clinical: Clinical,
+): Promise<void> {
+  await transition(id, actor, {
     status: 'prescription_ready',
     action: 'Published prescription',
     fields: { clinical },
   });
+  await syncConversationStatus(id, 'prescription_ready');
 }
 
 // ---- subscriptions ----

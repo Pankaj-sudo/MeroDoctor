@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Spinner } from '../components/Spinner';
+import { PatientMessagesPanel } from '../components/messaging/PatientMessagesPanel';
 import type { Role } from '../types/auth';
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -120,6 +121,11 @@ export function Dashboard() {
           </button>
         </div>
       </section>
+
+      {/* Persistent messaging: floating button + slide-over panel. Present on
+          the patient home so they can reach their doctor before/during/after a
+          consultation. */}
+      <PatientMessagesPanel />
     </main>
   );
 }

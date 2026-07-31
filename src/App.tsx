@@ -35,6 +35,9 @@ const DoctorDashboard = lazy(() =>
 const ConsultationDetail = lazy(() =>
   import('./pages/doctor/ConsultationDetail').then((m) => ({ default: m.ConsultationDetail })),
 );
+const MessagingCenter = lazy(() =>
+  import('./pages/doctor/MessagingCenter').then((m) => ({ default: m.MessagingCenter })),
+);
 const PrescriptionPrint = lazy(() =>
   import('./pages/doctor/PrescriptionPrint').then((m) => ({ default: m.PrescriptionPrint })),
 );
@@ -145,6 +148,22 @@ export function App() {
           element={
             <ProtectedRoute allow={['doctor', 'admin', 'clinic_staff']}>
               <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/messages"
+          element={
+            <ProtectedRoute allow={['doctor', 'admin', 'clinic_staff']}>
+              <MessagingCenter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/messages/:id"
+          element={
+            <ProtectedRoute allow={['doctor', 'admin', 'clinic_staff']}>
+              <MessagingCenter />
             </ProtectedRoute>
           }
         />

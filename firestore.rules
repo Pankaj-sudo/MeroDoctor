@@ -138,6 +138,91 @@ service cloud.firestore {
       allow update, delete: if false; // append-only
     }
 
+    // ----------------------------------------------------------- conversations
+    // Persistent doctor↔patient messaging channel, one per booking
+    // (conversationId === consultationId). Since consultation ids are already
+    // access-controlled, this also means a guessed id reveals nothing.
+    match /conversations/{conversationId} {
+      function convParticipant() {
+        return isSignedIn() && request.auth.uid in resource.data.participantIds;
+      }
+
+      allow read: if convParticipant() || isStaff();
+
+      // The doctor creates the conversation on approval. participantIds must be
+      // EXACTLY [patientId, doctorId] so it can never be widened, and the id must
+      // equal the consultation id (1 conversation : 1 booking).
+      allow create: if isStaff()
+        && conversationId == request.resource.data.consultationId
+        && request.resource.data.participantIds.size() == 2
+        && request.resource.data.participantIds.hasAll([
+            request.resource.data.patientId, request.resource.data.doctorId
+          ])
+        && request.resource.data.participantIds.hasOnly([
+            request.resource.data.patientId, request.resource.data.doctorId
+          ]);
+
+      // Staff manage the whole conversation (status, followUpExpiresAt, etc.).
+      // A participant (patient) may only touch: the preview + unread bookkeeping
+      // that a send requires, their own read state, and self pin/archive — never
+      // participants, status, or the follow-up window. `lastMessage`/`unread` are
+      // denormalised previews/counters, so a participant setting them (on send)
+      // is safe; the follow-up lock lives on the messages subcollection.
+      allow update: if isStaff()
+        || (convParticipant()
+            && request.resource.data.participantIds == resource.data.participantIds
+            && request.resource.data.status == resource.data.status
+            && request.resource.data.followUpExpiresAt == resource.data.followUpExpiresAt
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['unread', 'lastReadAt', 'lastMessage', 'pinnedBy', 'archivedBy', 'updatedAt']));
+
+      allow delete: if isAdmin();
+
+      // -------------------------------------------------------------- messages
+      function parentConv() {
+        return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
+      }
+      function isConvMember() {
+        return isSignedIn()
+          && (request.auth.uid in parentConv().participantIds || isStaff());
+      }
+      // The read-only-after-follow-up lock: sends allowed only while the window
+      // is open (null = active consultation). Enforced here, not just in the UI.
+      function withinFollowUp() {
+        return parentConv().followUpExpiresAt == null
+          || request.time < parentConv().followUpExpiresAt;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isConvMember();
+
+        allow create: if isConvMember()
+          && withinFollowUp()
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderRole in ['patient', 'doctor']
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 4000;
+
+        // Only receipt bumps (arrayUnion of self into readBy/deliveredTo) or a
+        // soft-delete of your own message. Never content edits.
+        allow update: if isConvMember()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['readBy', 'deliveredTo', 'deleted']);
+
+        allow delete: if false; // soft-delete only
+      }
+
+      // ---------------------------------------------------------------- typing
+      match /typing/{uid} {
+        allow read: if isConvMember();
+        // A user may only write their OWN typing presence, and only if they
+        // belong to the conversation.
+        allow write: if isSignedIn()
+          && request.auth.uid == uid
+          && (request.auth.uid in parentConv().participantIds || isStaff());
+      }
+    }
+
     // ----------------------------------- future collections (locked by default)
     match /notifications/{id} { allow read, write: if isStaff(); }
   }

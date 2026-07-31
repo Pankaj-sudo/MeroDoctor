@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useConversations } from '../../hooks/useConversations';
 import { subscribeAllConsultations } from '../../services/doctorService';
 import { STATUS_META } from '../../config/consultationStatus';
 import { formatNpr } from '../../config/payment';
@@ -78,6 +79,7 @@ export function DoctorDashboard() {
     .join('')
     .toUpperCase();
   const navigate = useNavigate();
+  const { totalUnread: msgUnread } = useConversations();
   const [all, setAll] = useState<Consultation[] | undefined>(undefined);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -165,6 +167,16 @@ export function DoctorDashboard() {
           MERODOCTOR <span>· {isAdmin ? 'Clinician & Admin' : 'Clinician'}</span>
         </div>
         <div className="d-top__actions">
+          <button
+            type="button"
+            className="d-iconbtn"
+            onClick={() => navigate('/doctor/messages')}
+            title="Messages"
+            aria-label={`Messages${msgUnread ? `, ${msgUnread} unread` : ''}`}
+          >
+            💬
+            {msgUnread > 0 ? <span className="d-badge-count">{msgUnread > 9 ? '9+' : msgUnread}</span> : null}
+          </button>
           <button type="button" className="d-iconbtn" onClick={toggleMute} title={muted ? 'Sound off' : 'Sound on'} aria-label="Toggle sound">
             {muted ? '🔕' : '🔔'}
             {stats.pending > 0 ? <span className="d-badge-count">{stats.pending}</span> : null}
